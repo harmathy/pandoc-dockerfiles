@@ -63,6 +63,7 @@ jobs:
       PANDOC_VERSION: ${{ needs.configure.outputs.pandoc-version }}
       WITHOUT_CROSSREF: ${{ needs.configure.outputs.without-crossref }}
       WITHOUT_CITEPROC: ${{ needs.configure.outputs.without-citeproc }}
+      IMAGE_BASE: ${{ secrets.DOCKER_HUB_PROJECT }}/${{ secrets.DOCKER_HUB_PREFIX }}
 
     steps:
       - uses: actions/checkout@v2
@@ -84,11 +85,11 @@ jobs:
       - name: Save images to archive
         run: |
           if [ -z "$WITHOUT_CROSSREF" ]; then
-              CROSSREF_IMAGE=${{ secrets.DOCKER_HUB_PROJECT }}/${{ secrets.DOCKER_HUB_PREFIX }}ubuntu-crossref:$PANDOC_VERSION
-              LATEX_IMAGE=${{ secrets.DOCKER_HUB_PROJECT }}/${{ secrets.DOCKER_HUB_PREFIX }}ubuntu-latex:$PANDOC_VERSION
+              CROSSREF_IMAGE=${IMAGE_BASE}ubuntu-crossref:$PANDOC_VERSION
+              LATEX_IMAGE=${IMAGE_BASE}ubuntu-latex:$PANDOC_VERSION
           fi
           docker save \
-                 ${{ secrets.DOCKER_HUB_PROJECT }}/${{ secrets.DOCKER_HUB_PREFIX }}ubuntu:$PANDOC_VERSION \
+                 ${IMAGE_BASE}ubuntu:$PANDOC_VERSION \
                  $CROSSREF_IMAGE $LATEX_IMAGE |\
               gzip > pandoc-$PANDOC_VERSION.tar.gz
 
@@ -149,6 +150,7 @@ jobs:
     env:
       PANDOC_VERSION: ${{ needs.configure.outputs.pandoc-version }}
       WITHOUT_CROSSREF: ${{ needs.configure.outputs.without-crossref }}
+      IMAGE_BASE: ${{ secrets.DOCKER_HUB_PROJECT }}/${{ secrets.DOCKER_HUB_PREFIX }}
 
     steps:
       - name: Download stored images
@@ -166,12 +168,12 @@ jobs:
             docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
 
       - name: Push core image
-        run: docker push ${{ secrets.DOCKER_HUB_PROJECT }}/${{ secrets.DOCKER_HUB_PREFIX }}ubuntu:$PANDOC_VERSION
+        run: docker push ${IMAGE_BASE}ubuntu:$PANDOC_VERSION
 
       - name: Push crossref image
         if: env.WITHOUT_CROSSREF == ''
-        run: docker push ${{ secrets.DOCKER_HUB_PROJECT }}/${{ secrets.DOCKER_HUB_PREFIX }}ubuntu-crossref:$PANDOC_VERSION
+        run: docker push ${IMAGE_BASE}ubuntu-crossref:$PANDOC_VERSION
 
       - name: Push LaTeX image
         if: env.WITHOUT_CROSSREF == ''
-        run: docker push ${{ secrets.DOCKER_HUB_PROJECT }}/${{ secrets.DOCKER_HUB_PREFIX }}ubuntu-latex:$PANDOC_VERSION
+        run: docker push ${IMAGE_BASE}ubuntu-latex:$PANDOC_VERSION
