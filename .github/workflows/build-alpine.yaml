@@ -84,11 +84,11 @@ jobs:
       - name: Save images to archive
         run: |
           if [ -z "$WITHOUT_CROSSREF" ]; then
-              CROSSREF_IMAGE=pandoc/alpine-crossref:$PANDOC_VERSION
-              LATEX_IMAGE=pandoc/alpine-latex:$PANDOC_VERSION
+              CROSSREF_IMAGE=${{ secrets.DOCKER_HUB_PROJECT }}/${{ secrets.DOCKER_HUB_PREFIX }}alpine-crossref:$PANDOC_VERSION
+              LATEX_IMAGE=${{ secrets.DOCKER_HUB_PROJECT }}/${{ secrets.DOCKER_HUB_PREFIX }}alpine-latex:$PANDOC_VERSION
           fi
           docker save \
-                 pandoc/alpine:$PANDOC_VERSION \
+                 ${{ secrets.DOCKER_HUB_PROJECT }}/${{ secrets.DOCKER_HUB_PREFIX }}alpine:$PANDOC_VERSION \
                  $CROSSREF_IMAGE $LATEX_IMAGE |\
               gzip > pandoc-$PANDOC_VERSION.tar.gz
 
@@ -109,8 +109,8 @@ jobs:
       PANDOC_VERSION: ${{ needs.configure.outputs.pandoc-version }}
       WITHOUT_CROSSREF: ${{ needs.configure.outputs.without-crossref }}
       WITHOUT_CITEPROC: ${{ needs.configure.outputs.without-citeproc }}
-      CORE_IMAGE: pandoc/alpine-core
-      CROSSREF_IMAGE: pandoc/alpine-crossref
+      CORE_IMAGE: ${{ secrets.DOCKER_HUB_PROJECT }}/${{ secrets.DOCKER_HUB_PREFIX }}alpine-core
+      CROSSREF_IMAGE: ${{ secrets.DOCKER_HUB_PROJECT }}/${{ secrets.DOCKER_HUB_PREFIX }}alpine-crossref
 
     steps:
       - name: Download images
@@ -140,7 +140,7 @@ jobs:
   push:
     name: Push
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.repository == 'pandoc/dockerfiles'
+    if: github.event_name == 'push'
     needs:
       - configure
       - build
@@ -168,20 +168,20 @@ jobs:
       # NOTE: for historical reasons alpine images receive two names.
       - name: Push core image
         run: |
-          docker push pandoc/alpine:$PANDOC_VERSION
-          docker tag pandoc/alpine:$PANDOC_VERSION pandoc/core:$PANDOC_VERSION
-          docker push pandoc/core:$PANDOC_VERSION
+          docker push ${{ secrets.DOCKER_HUB_PROJECT }}/${{ secrets.DOCKER_HUB_PREFIX }}alpine:$PANDOC_VERSION
+          docker tag ${{ secrets.DOCKER_HUB_PROJECT }}/${{ secrets.DOCKER_HUB_PREFIX }}alpine:$PANDOC_VERSION ${{ secrets.DOCKER_HUB_PROJECT }}/${{ secrets.DOCKER_HUB_PREFIX }}core:$PANDOC_VERSION
+          docker push ${{ secrets.DOCKER_HUB_PROJECT }}/${{ secrets.DOCKER_HUB_PREFIX }}core:$PANDOC_VERSION
 
       - name: Push crossref image
         if: env.WITHOUT_CROSSREF == ''
         run: |
-          docker push pandoc/alpine-crossref:$PANDOC_VERSION
-          docker tag pandoc/alpine-crossref:$PANDOC_VERSION pandoc/crossref:$PANDOC_VERSION
-          docker push pandoc/crossref:$PANDOC_VERSION
+          docker push ${{ secrets.DOCKER_HUB_PROJECT }}/${{ secrets.DOCKER_HUB_PREFIX }}alpine-crossref:$PANDOC_VERSION
+          docker tag ${{ secrets.DOCKER_HUB_PROJECT }}/${{ secrets.DOCKER_HUB_PREFIX }}alpine-crossref:$PANDOC_VERSION ${{ secrets.DOCKER_HUB_PROJECT }}/${{ secrets.DOCKER_HUB_PREFIX }}crossref:$PANDOC_VERSION
+          docker push ${{ secrets.DOCKER_HUB_PROJECT }}/${{ secrets.DOCKER_HUB_PREFIX }}crossref:$PANDOC_VERSION
 
       - name: Push LaTeX image
         if: env.WITHOUT_CROSSREF == ''
         run: |
-          docker push pandoc/alpine-latex:$PANDOC_VERSION
-          docker tag pandoc/alpine-latex:$PANDOC_VERSION pandoc/latex:$PANDOC_VERSION
-          docker push pandoc/latex:$PANDOC_VERSION
+          docker push ${{ secrets.DOCKER_HUB_PROJECT }}/${{ secrets.DOCKER_HUB_PREFIX }}alpine-latex:$PANDOC_VERSION
+          docker tag ${{ secrets.DOCKER_HUB_PROJECT }}/${{ secrets.DOCKER_HUB_PREFIX }}alpine-latex:$PANDOC_VERSION ${{ secrets.DOCKER_HUB_PROJECT }}/${{ secrets.DOCKER_HUB_PREFIX }}latex:$PANDOC_VERSION
+          docker push ${{ secrets.DOCKER_HUB_PROJECT }}/${{ secrets.DOCKER_HUB_PREFIX }}latex:$PANDOC_VERSION
